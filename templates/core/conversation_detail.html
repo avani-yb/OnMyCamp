@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ interlocuteur.get_full_name }}{% endblock %}
+
+{% block extra_css %}
+.chat-header {
+  padding: 12px 16px; background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+  position: sticky; top: 56px; z-index: 50;
+}
+.ch-av {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--green-light); color: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800;
+}
+.ch-info { flex: 1; }
+.ch-name { font-size: 14px; font-weight: 800; }
+.ch-role { font-size: 11px; color: var(--muted); }
+.messages-zone {
+  padding: 12px; display: flex;
+  flex-direction: column; gap: 8px;
+  min-height: 400px;
+}
+.msg-row { display: flex; align-items: flex-end; gap: 8px; }
+.msg-row.mine { flex-direction: row-reverse; }
+.msg-av {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--green-light); color: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+.bubble {
+  max-width: 75%; padding: 9px 12px;
+  border-radius: 16px; font-size: 13px;
+  line-height: 1.55;
+}
+.bubble.other {
+  background: white; color: var(--text);
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--shadow);
+}
+.bubble.mine {
+  background: var(--green); color: white;
+  border-bottom-right-radius: 4px;
+}
+.b-time { font-size: 10px; opacity: .5; margin-top: 4px; display: block; }
+.msg-input-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; background: white;
+  border-top: 1px solid var(--border);
+  position: sticky; bottom: 66px;
+}
+.msg-input {
+  flex: 1; padding: 10px 14px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 999px; font-size: 13px;
+  outline: none; font-family: inherit;
+  transition: border .2s;
+}
+.msg-input:focus { border-color: var(--green); }
+.send-btn {
+  width: 40px; height: 40px;
+  background: var(--green); border-radius: 50%;
+  border: none; cursor: pointer; color: white;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+{% endblock %}
+
+{% block content %}
+<div class="chat-header">
+  <a href="{% url 'inbox' %}" style="color:var(--muted);font-size:20px;margin-right:4px;">←</a>
+  <div class="ch-av">
+    {{ interlocuteur.first_name|first|upper }}{{ interlocuteur.last_name|first|upper }}
+  </div>
+  <div class="ch-info">
+    <div class="ch-name">{{ interlocuteur.get_full_name }}</div>
+    <div class="ch-role">{{ interlocuteur.get_role_display }}</div>
+  </div>
+</div>
+
+<div class="messages-zone" id="msgs">
+  {% for msg in msgs %}
+  <div class="msg-row {% if msg.auteur == request.user %}mine{% endif %}">
+    {% if msg.auteur != request.user %}
+    <div class="msg-av">
+      {{ msg.auteur.first_name|first|upper }}{{ msg.auteur.last_name|first|upper }}
+    </div>
+    {% endif %}
+    <div class="bubble {% if msg.auteur == request.user %}mine{% else %}other{% endif %}">
+      {% if msg.contenu %}{{ msg.contenu }}{% endif %}
+      {% if msg.fichier %}
+        <a href="{{ msg.fichier.url }}"
+          style="color:{% if msg.auteur == request.user %}rgba(255,255,255,.8){% else %}var(--green){% endif %}">
+          📎 Télécharger le fichier
+        </a>
+      {% endif %}
+      <span class="b-time">{{ msg.date|time:"H:i" }}</span>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <div class="e-icon">👋</div>
+    <p>Dis bonjour à {{ interlocuteur.first_name }} !</p>
+  </div>
+  {% endfor %}
+</div>
+
+<form method="post" enctype="multipart/form-data" class="msg-input-bar">
+  {% csrf_token %}
+  <input type="text" name="contenu" class="msg-input"
+    placeholder="Écrire un message..." autocomplete="off">
+  <button type="submit" class="send-btn">➤</button>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const msgs = document.getElementById('msgs');
+  if (msgs) msgs.scrollTop = msgs.scrollHeight;
+</script>
+{% endblock %}

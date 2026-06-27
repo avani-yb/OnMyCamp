@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Profil{% endblock %}
+
+{% block extra_css %}
+.profil-wrap { padding: 16px; }
+.profil-card {
+  background: white; border-radius: var(--radius);
+  overflow: hidden; box-shadow: var(--shadow);
+  margin-bottom: 12px;
+}
+.profil-banner {
+  height: 100px;
+  background: linear-gradient(135deg, var(--green), var(--green-mid));
+}
+.profil-body { padding: 0 16px 16px; }
+.profil-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: white; border: 4px solid white;
+  margin-top: -36px; margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-weight: 800;
+  color: var(--green);
+  box-shadow: 0 2px 12px rgba(0,0,0,.1);
+}
+.profil-name { font-size: 18px; font-weight: 800; }
+.profil-role {
+  font-size: 12px; color: var(--green);
+  font-weight: 700; margin-bottom: 4px;
+}
+.profil-mat { font-size: 12px; color: var(--muted); }
+
+.info-row {
+  display: flex; justify-content: space-between;
+  align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { color: var(--muted); font-weight: 600; }
+.info-val { font-weight: 700; }
+
+.badge-priv {
+  display: inline-block; padding: 4px 10px;
+  border-radius: 999px; font-size: 11px; font-weight: 800;
+  background: var(--green-light); color: var(--green);
+}
+
+.logout-btn {
+  width: 100%; padding: 13px;
+  background: #ffeeee; color: #cc3333;
+  font-size: 14px; font-weight: 800;
+  border: none; border-radius: 10px;
+  cursor: pointer; margin-top: 8px;
+  text-align: center; display: block;
+  text-decoration: none;
+}
+{% endblock %}
+
+{% block content %}
+<div class="profil-wrap">
+  <div class="profil-card">
+    <div class="profil-banner"></div>
+    <div class="profil-body">
+      <div class="profil-avatar">
+        {{ user_profil.first_name|first|upper }}{{ user_profil.last_name|first|upper }}
+      </div>
+      <div class="profil-name">{{ user_profil.get_full_name }}</div>
+      <div class="profil-role">{{ user_profil.get_role_display }}</div>
+      {% if user_profil.matricule %}
+      <div class="profil-mat">Matricule : {{ user_profil.matricule }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="profil-card">
+    <div style="padding:14px 16px;">
+      <div class="info-row">
+        <span class="info-label">Username</span>
+        <span class="info-val">@{{ user_profil.username }}</span>
+      </div>
+      {% if user_profil.email %}
+      <div class="info-row">
+        <span class="info-label">Email</span>
+        <span class="info-val">{{ user_profil.email }}</span>
+      </div>
+      {% endif %}
+      <div class="info-row">
+        <span class="info-label">Rôle</span>
+        <span class="info-val">{{ user_profil.get_role_display }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Privilège</span>
+        <span class="badge-priv">{{ user_profil.get_privilege_display }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Statut campus</span>
+        <span class="info-val" style="color:{% if user_profil.is_active_campus %}var(--green){% else %}#cc3333{% endif %}">
+          {% if user_profil.is_active_campus %}✅ Actif{% else %}❌ Inactif{% endif %}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Membre depuis</span>
+        <span class="info-val">{{ user_profil.date_joined|date:"d M Y" }}</span>
+      </div>
+    </div>
+  </div>
+
+  {% if request.user == user_profil %}
+  <a href="{% url 'logout' %}" class="logout-btn">🚪 Se déconnecter</a>
+  {% endif %}
+</div>
+{% endblock %}

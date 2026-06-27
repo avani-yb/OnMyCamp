@@ -1,0 +1,164 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OnMyCamp — Inscription</title>
+  <style>
+    :root {
+      --green: #1a7a4a; --green-dark: #115533;
+      --green-light: #e8f5ee; --gold: #f0a500;
+      --border: #e2e8e4; --muted: #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--green-dark);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; padding: 24px;
+    }
+    .logo-wrap {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 8px;
+      margin: 24px 0 20px;
+    }
+    .logo-wrap img { width: 70px; height: 70px; border-radius: 16px; }
+    .logo-wrap h1 { font-size: 22px; font-weight: 800; color: white; }
+    .logo-wrap h1 em { color: var(--gold); font-style: normal; }
+    .card {
+      background: white; border-radius: 20px;
+      padding: 24px; width: 100%; max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+      margin-bottom: 24px;
+    }
+    .card h2 { font-size: 20px; font-weight: 800; color: var(--green); margin-bottom: 4px; }
+    .card p { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .form-group { margin-bottom: 13px; }
+    .form-group label {
+      display: block; font-size: 11px; font-weight: 700;
+      color: var(--muted); margin-bottom: 4px;
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .form-control {
+      width: 100%; padding: 10px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 9px; font-size: 14px;
+      outline: none; transition: border .2s;
+      font-family: inherit;
+    }
+    .form-control:focus { border-color: var(--green); }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-submit {
+      width: 100%; padding: 12px;
+      background: var(--green); color: white;
+      font-size: 15px; font-weight: 800;
+      border: none; border-radius: 10px;
+      cursor: pointer; margin-top: 6px;
+      transition: background .2s;
+    }
+    .btn-submit:hover { background: var(--green-dark); }
+    .link-row {
+      text-align: center; margin-top: 16px;
+      font-size: 13px; color: var(--muted);
+    }
+    .link-row a { color: var(--green); font-weight: 700; }
+    .alert {
+      padding: 10px 14px; border-radius: 9px;
+      font-size: 13px; font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .alert-error { background: #ffeeee; color: #cc3333; }
+    .matricule-note {
+      font-size: 11px; color: var(--muted);
+      margin-top: 4px; font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logo-wrap">
+    <img src="{% static 'images/Logo.png' %}" alt="OnMyCamp">
+    <h1>On<em>My</em>Camp</h1>
+  </div>
+
+  <div class="card">
+    <h2>Créer un compte</h2>
+    <p>Rejoins le réseau social de l'IAI</p>
+
+    {% if messages %}
+      {% for m in messages %}
+      <div class="alert alert-{{ m.tags }}">❌ {{ m }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="row-2">
+        <div class="form-group">
+          <label>Prénom</label>
+          <input type="text" name="first_name" class="form-control"
+            placeholder="Alfred" required>
+        </div>
+        <div class="form-group">
+          <label>Nom</label>
+          <input type="text" name="last_name" class="form-control"
+            placeholder="Aganoko" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Matricule IAI</label>
+        <input type="text" name="matricule" class="form-control"
+          placeholder="Ex: GL.CMR.G007.2324">
+        <p class="matricule-note">
+          Ton matricule étudiant de l'IAI Cameroun
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label>Nom d'utilisateur</label>
+        <input type="text" name="username" class="form-control"
+          placeholder="aganoko10" required>
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" class="form-control"
+          placeholder="Alfredaganoko@gmail.com">
+      </div>
+
+      <div class="form-group">
+        <label>Tu es</label>
+        <select name="role" class="form-control">
+          <option value="etudiant">Étudiant</option>
+          <option value="enseignant">Enseignant</option>
+          <option value="tuteur">Tuteur</option>
+        </select>
+      </div>
+
+      <div class="row-2">
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" name="password1" class="form-control"
+            placeholder="••••••••" required>
+        </div>
+        <div class="form-group">
+          <label>Confirmer</label>
+          <input type="password" name="password2" class="form-control"
+            placeholder="••••••••" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit">Créer mon compte →</button>
+    </form>
+
+    <div class="link-row">
+      Déjà un compte ? <a href="{% url 'login' %}">Se connecter</a>
+    </div>
+  </div>
+
+</body>
+</html>

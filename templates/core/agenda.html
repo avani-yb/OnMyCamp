@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Agenda{% endblock %}
+
+{% block header_plus %}
+  {% if request.user.role in "rr,daac" or request.user.privilege == "admin" or request.user.privilege == "superadmin" %}
+  <a href="{% url 'event_create' %}" class="h-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="18" height="18">
+      <path d="M12 5v14M5 12h14"/>
+    </svg>
+  </a>
+  {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+.agenda-wrap { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.ev-card {
+  background: white; border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex; align-items: flex-start; gap: 12px;
+  box-shadow: var(--shadow);
+}
+.ev-box {
+  border-radius: 10px; width: 44px;
+  padding: 6px 4px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  align-items: center; background: var(--green); color: white;
+}
+.ev-day { font-size: 19px; font-weight: 800; line-height: 1; }
+.ev-mon { font-size: 9px; font-weight: 600; opacity: .85; }
+.ev-info { flex: 1; }
+.ev-title { font-size: 13px; font-weight: 800; margin-bottom: 2px; }
+.ev-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.ev-time { font-size: 11px; color: var(--green); font-weight: 600; margin-top: 4px; }
+.ev-tag {
+  display: inline-block; padding: 2px 7px;
+  border-radius: 999px; font-size: 10px;
+  font-weight: 700; margin-top: 4px;
+}
+.ev-tag.examen   { background: #ffeeee; color: #cc3333; }
+.ev-tag.conference { background: var(--green-light); color: var(--green); }
+.ev-tag.ferie    { background: #fff3e0; color: #e65100; }
+.ev-tag.autre    { background: #e8f0fa; color: #1a4a7a; }
+
+/* Mois groupés */
+.month-header {
+  font-size: 13px; font-weight: 800;
+  color: var(--green); padding: 8px 2px 4px;
+  border-bottom: 2px solid var(--green-light);
+  margin-bottom: 4px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="agenda-wrap">
+  {% regroup events by date_event|date:"F Y" as events_by_month %}
+
+  {% for month in events_by_month %}
+  <div class="month-header">📅 {{ month.grouper }}</div>
+
+  {% for ev in month.list %}
+  <div class="ev-card">
+    <div class="ev-box"
+      style="{% if ev.type_event == 'ferie' %}background:#e65100;{% elif ev.type_event == 'examen' %}background:#cc3333;{% endif %}">
+      <div class="ev-day">{{ ev.date_event|date:"d" }}</div>
+      <div class="ev-mon">{{ ev.date_event|date:"M"|upper }}</div>
+    </div>
+    <div class="ev-info">
+      <div class="ev-title">{{ ev.titre }}</div>
+      {% if ev.description %}
+      <div class="ev-desc">{{ ev.description }}</div>
+      {% endif %}
+      {% if ev.heure_debut %}
+      <div class="ev-time">
+        ⏰ {{ ev.heure_debut|time:"H\hi" }}
+        {% if ev.heure_fin %} → {{ ev.heure_fin|time:"H\hi" }}{% endif %}
+      </div>
+      {% endif %}
+      <span class="ev-tag {{ ev.type_event }}">
+        {{ ev.get_type_event_display }}
+      </span>
+    </div>
+  </div>
+  {% endfor %}
+  {% empty %}
+  <div class="empty-state">
+    <div class="e-icon">📅</div>
+    <p>Aucun événement prévu.<br>
+    {% if request.user.role in "rr,daac" %}
+      <a href="{% url 'event_create' %}" style="color:var(--green);font-weight:700;">
+        Ajoutez le premier !
+      </a>
+    {% endif %}
+    </p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+

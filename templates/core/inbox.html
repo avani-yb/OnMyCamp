@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Inbox{% endblock %}
+
+{% block header_plus %}
+<a href="{% url 'conversation_new' %}" class="h-btn">
+  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="18" height="18">
+    <path d="M12 5v14M5 12h14"/>
+  </svg>
+</a>
+{% endblock %}
+
+{% block extra_css %}
+.conv-list { display: flex; flex-direction: column; }
+.conv-item {
+  display: flex; align-items: center;
+  padding: 12px 16px; gap: 12px;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none; color: var(--text);
+  transition: background .15s;
+}
+.conv-item:hover { background: var(--green-light); }
+.c-av {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--green-light); color: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; flex-shrink: 0;
+  position: relative;
+}
+.c-info { flex: 1; min-width: 0; }
+.c-name { font-size: 13px; font-weight: 800; }
+.c-prev {
+  font-size: 12px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.c-prev.unread { color: var(--text); font-weight: 700; }
+.c-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.c-time { font-size: 10px; color: var(--muted); }
+.c-badge {
+  background: var(--green); color: white;
+  font-size: 10px; font-weight: 800;
+  min-width: 18px; height: 18px;
+  border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px;
+}
+.fab{
+    
+}
+{% endblock %}
+
+{% block content %}
+<div class="search-wrap">
+  <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" width="16" height="16">
+    <circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/>
+  </svg>
+  <input type="text" placeholder="Rechercher une conversation..."
+    id="sc" oninput="filterConvs()">
+</div>
+
+<div class="conv-list" id="convList">
+  {% for item in conv_list %}
+  <a href="{% url 'conversation_detail' item.conv.pk %}" class="conv-item">
+    <div class="c-av">
+      {{ item.interlocuteur.first_name|first|upper }}{{ item.interlocuteur.last_name|first|upper }}
+    </div>
+    <div class="c-info">
+      <div class="c-name">{{ item.interlocuteur.get_full_name }}</div>
+      <div class="c-prev {% if item.unread > 0 %}unread{% endif %}">
+        {% if item.last_msg %}
+          {% if item.last_msg.fichier %}📎 Fichier
+          {% else %}{{ item.last_msg.contenu|truncatechars:44 }}
+          {% endif %}
+        {% else %}Nouvelle conversation{% endif %}
+      </div>
+    </div>
+    <div class="c-right">
+      <div class="c-time">
+        {% if item.last_msg %}{{ item.last_msg.date|timesince }}{% endif %}
+      </div>
+      {% if item.unread > 0 %}
+      <div class="c-badge">{{ item.unread }}</div>
+      {% endif %}
+    </div>
+  </a>
+  {% empty %}
+  <div class="empty-state">
+    <div class="e-icon">💬</div>
+    <p>Aucune conversation.<br>
+      <a href="{% url 'conversation_new' %}"
+        style="color:var(--green);font-weight:700;">
+        Démarrez une discussion !
+      </a>
+    </p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+function filterConvs() {
+  const q = document.getElementById('sc').value.toLowerCase();
+  document.querySelectorAll('.conv-item').forEach(i => {
+    i.style.display = i.querySelector('.c-name')
+      .textContent.toLowerCase().includes(q) ? 'flex' : 'none';
+  });
+}
+</script>
+{% endblock %}

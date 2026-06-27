@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Créer un groupe{% endblock %}
+
+{% block extra_css %}
+.form-wrap { padding: 16px; }
+.form-wrap h2 { font-size: 18px; font-weight: 800; color: var(--green); margin-bottom: 16px; }
+.emoji-grid {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 8px;
+}
+.emoji-opt {
+  width: 42px; height: 42px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .15s; background: white;
+}
+.emoji-opt.selected {
+  border-color: var(--green);
+  background: var(--green-light);
+}
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+  <h2>👥 Nouveau groupe</h2>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="emoji" id="emoji-val" value="👥">
+
+    <div class="form-group">
+      <label>Nom du groupe</label>
+      <input type="text" name="nom" class="form-control"
+        placeholder="Ex: GL3D Promo 2024" required>
+    </div>
+
+    <div class="form-group">
+      <label>Description</label>
+      <textarea name="description" class="form-control" rows="3"
+        placeholder="À quoi sert ce groupe ?"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Emoji du groupe</label>
+      <div class="emoji-grid">
+        {% for e in "👥🎓📚🤖📱💻🏆🔬🎯🌍🏫📝"|make_list %}
+        <button type="button" class="emoji-opt {% if forloop.first %}selected{% endif %}"
+          onclick="selectEmoji('{{ e }}', this)">{{ e }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <a href="{% url 'team' %}" class="btn btn-outline" style="flex:1;text-align:center;">Annuler</a>
+      <button type="submit" class="btn btn-green" style="flex:2;">Créer →</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectEmoji(e, btn) {
+  document.getElementById('emoji-val').value = e;
+  document.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+</script>
+{% endblock %}

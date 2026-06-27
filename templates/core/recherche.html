@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Recherche{% endblock %}
+
+{% block extra_css %}
+.search-page { padding: 12px; }
+.search-page form {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+.search-page input {
+  flex: 1; padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 999px; font-size: 14px;
+  outline: none; font-family: inherit;
+}
+.search-page input:focus { border-color: var(--green); }
+.search-page button {
+  padding: 10px 16px;
+  background: var(--green); color: white;
+  border: none; border-radius: 999px;
+  font-weight: 700; cursor: pointer;
+}
+.result-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px; background: white;
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px; box-shadow: var(--shadow);
+  text-decoration: none; color: var(--text);
+}
+.r-av {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--green-light); color: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+}
+.r-info { flex: 1; }
+.r-name { font-size: 13px; font-weight: 800; }
+.r-sub { font-size: 11px; color: var(--muted); }
+{% endblock %}
+
+{% block content %}
+<div class="search-page">
+  <form method="get">
+    <input type="text" name="q" value="{{ query }}"
+      placeholder="Chercher un étudiant, un post..." autofocus>
+    <button type="submit">🔍</button>
+  </form>
+
+  {% if query %}
+  {% if results_users %}
+  <div class="sec-head">Utilisateurs</div>
+  {% for u in results_users %}
+  <a href="{% url 'profil' u.pk %}" class="result-item">
+    <div class="r-av">{{ u.first_name|first|upper }}{{ u.last_name|first|upper }}</div>
+    <div class="r-info">
+      <div class="r-name">{{ u.get_full_name }}</div>
+      <div class="r-sub">@{{ u.username }} · {{ u.get_role_display }}</div>
+    </div>
+  </a>
+  {% endfor %}
+  {% endif %}
+
+  {% if results_posts %}
+  <div class="sec-head" style="margin-top:8px;">Publications</div>
+  {% for post in results_posts %}
+  <div class="result-item">
+    <div class="r-av" style="border-radius:10px;background:#e8f0fa;color:#1a4a7a;">📝</div>
+    <div class="r-info">
+      <div class="r-name">{{ post.auteur.get_full_name }}</div>
+      <div class="r-sub">{{ post.contenu|truncatechars:60 }}</div>
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if not results_users and not results_posts %}
+  <div class="empty-state">
+    <div class="e-icon">🔍</div>
+    <p>Aucun résultat pour "{{ query }}"</p>
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

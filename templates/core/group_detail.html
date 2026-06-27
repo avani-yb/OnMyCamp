@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+{% block title %}{{ group.nom }}{% endblock %}
+
+{% block extra_css %}
+.chat-header {
+  padding: 12px 16px; background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.chat-icon {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: var(--green-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.chat-info { flex: 1; }
+.chat-name { font-size: 14px; font-weight: 800; }
+.chat-members { font-size: 11px; color: var(--muted); }
+
+/* Panneau membres (collapsible) */
+.members-panel {
+  background: var(--green-light);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+.members-panel.open {
+  max-height: 400px;
+  padding: 12px 16px;
+}
+.members-panel h4 {
+  font-size: 11px; font-weight: 700;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.8px; margin-bottom: 10px;
+}
+.member-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.member-item:last-child { border-bottom: none; }
+.m-av {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--green); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; flex-shrink: 0;
+}
+.m-info { flex: 1; }
+.m-name { font-size: 13px; font-weight: 700; }
+.m-role { font-size: 11px; color: var(--muted); }
+.m-badge {
+  background: var(--green); color: white;
+  font-size: 9px; font-weight: 800;
+  padding: 2px 6px; border-radius: 999px;
+}
+.remove-btn {
+  background: #ffeeee; color: #cc3333;
+  border: none; border-radius: 6px;
+  font-size: 11px; font-weight: 700;
+  padding: 4px 8px; cursor: pointer;
+}
+
+/* Formulaire ajout membre */
+.add-member-form {
+  margin-top: 10px;
+  display: flex; gap: 8px;
+}
+.add-member-form select {
+  flex: 1; padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px; font-size: 13px;
+  font-family: inherit; outline: none;
+  background: white;
+}
+.add-member-form select:focus { border-color: var(--green); }
+.add-member-form button {
+  padding: 8px 14px;
+  background: var(--green); color: white;
+  border: none; border-radius: 9px;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+
+.messages-zone {
+  padding: 12px; display: flex;
+  flex-direction: column; gap: 8px;
+  min-height: 300px;
+}
+.msg-row { display: flex; align-items: flex-end; gap: 8px; }
+.msg-row.mine { flex-direction: row-reverse; }
+.msg-av {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--green-light); color: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+.bubble {
+  max-width: 75%; padding: 9px 12px;
+  border-radius: 16px; font-size: 13px; line-height: 1.55;
+}
+.bubble.other {
+  background: white; color: var(--text);
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--shadow);
+}
+.bubble.mine {
+  background: var(--green); color: white;
+  border-bottom-right-radius: 4px;
+}
+.b-name {
+  font-size: 10px; font-weight: 700;
+  color: var(--green); margin-bottom: 3px;
+}
+.bubble.mine .b-name { color: rgba(255,255,255,.7); }
+.b-time { font-size: 10px; opacity: .5; margin-top: 4px; display: block; }
+
+.msg-input-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; background: white;
+  border-top: 1px solid var(--border);
+  position: sticky; bottom: 66px;
+}
+.msg-input {
+  flex: 1; padding: 10px 14px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 999px; font-size: 13px; outline: none;
+  font-family: inherit; transition: border .2s;
+}
+.msg-input:focus { border-color: var(--green); }
+.send-btn {
+  width: 40px; height: 40px;
+  background: var(--green); border-radius: 50%;
+  border: none; cursor: pointer; color: white;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+{% endblock %}
+
+{% block content %}
+
+<!-- En-tête groupe -->
+<div class="chat-header">
+  <div class="chat-icon">{{ group.emoji }}</div>
+  <div class="chat-info">
+    <div class="chat-name">{{ group.nom }}</div>
+    <div class="chat-members">{{ group.membres.count }} membre{{ group.membres.count|pluralize }}</div>
+  </div>
+  <!-- Bouton voir membres -->
+  <button onclick="toggleMembers()" style="background:var(--green-light);border:none;color:var(--green);padding:6px 12px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;" id="members-btn">
+    👥 Membres
+  </button>
+  <a href="{% url 'team' %}" style="color:var(--muted);font-size:20px;margin-left:4px;">←</a>
+</div>
+
+<!-- Panneau membres (admin seulement) -->
+{% if request.user == group.admin %}
+<div class="members-panel" id="members-panel">
+  <h4>Membres du groupe</h4>
+
+  <!-- Liste membres actuels -->
+  {% for membre in group.membres.all %}
+  <div class="member-item">
+    <div class="m-av">
+      {{ membre.first_name|first|upper }}{{ membre.last_name|first|upper }}
+    </div>
+    <div class="m-info">
+      <div class="m-name">{{ membre.get_full_name }}</div>
+      <div class="m-role">{{ membre.get_role_display }}</div>
+    </div>
+    {% if membre == group.admin %}
+      <span class="m-badge">Admin</span>
+    {% else %}
+      <form method="post" action="{% url 'group_remove_member' group.pk membre.pk %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="remove-btn"
+          onclick="return confirm('Retirer {{ membre.first_name }} du groupe ?')">
+          Retirer
+        </button>
+      </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  <!-- Ajouter un membre -->
+  <div style="margin-top:12px;">
+    <h4>Ajouter un membre</h4>
+    <form method="post" action="{% url 'group_add_member' group.pk %}" class="add-member-form">
+      {% csrf_token %}
+      <select name="user_pk" required>
+        <option value="">-- Choisir un utilisateur --</option>
+        {% for u in users_to_add %}
+        <option value="{{ u.pk }}">{{ u.get_full_name }} ({{ u.get_role_display }})</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Ajouter ＋</button>
+    </form>
+  </div>
+</div>
+{% else %}
+<!-- Membres visibles pour tous (lecture seule) -->
+<div class="members-panel" id="members-panel">
+  <h4>Membres du groupe</h4>
+  {% for membre in group.membres.all %}
+  <div class="member-item">
+    <div class="m-av">
+      {{ membre.first_name|first|upper }}{{ membre.last_name|first|upper }}
+    </div>
+    <div class="m-info">
+      <div class="m-name">{{ membre.get_full_name }}</div>
+      <div class="m-role">{{ membre.get_role_display }}</div>
+    </div>
+    {% if membre == group.admin %}
+      <span class="m-badge">Admin</span>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Messages -->
+<div class="messages-zone" id="msgs">
+  {% for msg in messages_list %}
+  <div class="msg-row {% if msg.auteur == request.user %}mine{% endif %}">
+    {% if msg.auteur != request.user %}
+    <div class="msg-av">
+      {{ msg.auteur.first_name|first|upper }}{{ msg.auteur.last_name|first|upper }}
+    </div>
+    {% endif %}
+    <div class="bubble {% if msg.auteur == request.user %}mine{% else %}other{% endif %}">
+      <div class="b-name">
+        {% if msg.auteur == request.user %}Vous{% else %}{{ msg.auteur.get_full_name }}{% endif %}
+      </div>
+      {{ msg.contenu }}
+      <span class="b-time">{{ msg.date|time:"H:i" }}</span>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <div class="e-icon">💬</div>
+    <p>Aucun message encore.<br>Commencez la discussion !</p>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Input message -->
+<form method="post" class="msg-input-bar">
+  {% csrf_token %}
+  <input type="text" name="contenu" class="msg-input"
+    placeholder="Écrire un message..." autocomplete="off" id="msgInput">
+  <button type="submit" class="send-btn">➤</button>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleMembers() {
+  const panel = document.getElementById('members-panel');
+  const btn = document.getElementById('members-btn');
+  panel.classList.toggle('open');
+  btn.textContent = panel.classList.contains('open') ? '✕ Fermer' : '👥 Membres';
+}
+const msgs = document.getElementById('msgs');
+if (msgs) msgs.scrollTop = msgs.scrollHeight;
+</script>
+{% endblock %}

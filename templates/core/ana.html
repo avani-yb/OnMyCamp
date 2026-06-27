@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% block title %}Ana IA{% endblock %}
+
+{% block header %}
+<header class="app-header" style="background:linear-gradient(135deg,#6c3fc5,#4a2a9a);">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="width:36px;height:36px;border-radius:50%;
+      background:linear-gradient(135deg,#a78be8,#6c3fc5);
+      display:flex;align-items:center;justify-content:center;font-size:18px;
+      border:2px solid rgba(255,255,255,.3);">🤖</div>
+    <div>
+      <div style="font-size:15px;font-weight:800;color:white;">Ana</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:4px;">
+        <span style="width:6px;height:6px;background:#2ed573;border-radius:50%;display:inline-block;"></span>
+        En ligne · Assistante IA IAI
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:7px;">
+    <a href="{% url 'recherche' %}" class="h-btn">🔍</a>
+    <a href="{% url 'notifications' %}" class="h-btn">🔔</a>
+    <a href="{% url 'profil' request.user.pk %}" class="h-btn">☰</a>
+  </div>
+</header>
+{% endblock %}
+
+{% block extra_css %}
+body { background: #f8f5ff; }
+
+.ana-intro {
+  background: linear-gradient(135deg, #6c3fc5, #4a2a9a);
+  border-radius: 16px; padding: 18px; margin: 12px;
+  color: white; text-align: center;
+  box-shadow: 0 4px 20px rgba(108,63,197,.3);
+}
+.ana-intro .ai-icon { font-size: 36px; margin-bottom: 8px; }
+.ana-intro h2 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+.ana-intro p { font-size: 12px; opacity: .85; line-height: 1.6; }
+.ana-caps {
+  display: flex; flex-wrap: wrap;
+  gap: 6px; justify-content: center; margin-top: 12px;
+}
+.ana-cap {
+  background: rgba(255,255,255,.18);
+  border-radius: 999px; padding: 3px 10px;
+  font-size: 10px; font-weight: 700;
+}
+
+.messages-zone {
+  padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.msg-row { display: flex; align-items: flex-end; gap: 8px; }
+.msg-row.user { flex-direction: row-reverse; }
+
+.ana-av {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #a78be8, #6c3fc5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+
+.bubble {
+  max-width: 80%; padding: 10px 13px;
+  border-radius: 18px; font-size: 13px; line-height: 1.65;
+  box-shadow: 0 1px 6px rgba(0,0,0,.07);
+}
+.bubble.ana {
+  background: white; color: var(--text);
+  border-bottom-left-radius: 4px;
+  border: 1px solid #e8e0ff;
+}
+.bubble.user {
+  background: linear-gradient(135deg, #6c3fc5, #4a2a9a);
+  color: white; border-bottom-right-radius: 4px;
+}
+.b-time { font-size: 10px; opacity: .45; margin-top: 5px; display: block; }
+
+/* Suggestions */
+.ana-suggestions {
+  display: flex; gap: 7px; overflow-x: auto;
+  padding: 4px 12px 10px; scrollbar-width: none;
+}
+.ana-suggestions::-webkit-scrollbar { display: none; }
+.sug {
+  flex-shrink: 0; padding: 6px 12px;
+  background: white; border: 1.5px solid #e0d5ff;
+  border-radius: 999px; font-size: 11px; font-weight: 700;
+  color: #6c3fc5; cursor: pointer;
+  font-family: inherit; white-space: nowrap;
+  transition: all .15s;
+}
+.sug:hover { background: #f0eaff; border-color: #6c3fc5; }
+
+/* Input bar */
+.ana-input-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; background: white;
+  border-top: 1px solid #e8e0ff;
+  position: sticky; bottom: 66px;
+}
+.ana-input {
+  flex: 1; padding: 10px 14px;
+  background: #f8f5ff; border: 1.5px solid #e0d5ff;
+  border-radius: 999px; font-size: 13px;
+  outline: none; font-family: inherit;
+  transition: border .2s;
+}
+.ana-input:focus { border-color: #6c3fc5; }
+.ana-send {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, #6c3fc5, #4a2a9a);
+  border-radius: 50%; border: none; cursor: pointer;
+  color: white; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 10px rgba(108,63,197,.4);
+}
+
+/* Typing */
+.typing-bub {
+  background: white; padding: 11px 14px;
+  border-radius: 18px; border-bottom-left-radius: 4px;
+  border: 1px solid #e8e0ff;
+  display: flex; gap: 5px; align-items: center;
+}
+.td {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #9b6ee8; animation: td 1.2s infinite;
+}
+.td:nth-child(2){animation-delay:.2s;}
+.td:nth-child(3){animation-delay:.4s;}
+@keyframes td{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-7px);opacity:1;}}
+{% endblock %}
+
+{% block content %}
+<!-- Intro -->
+<div class="ana-intro">
+  <div class="ai-icon">🤖</div>
+  <h2>Bonjour {{ request.user.first_name }}, je suis Ana !</h2>
+  <p>Ton assistante IA spécialisée en Tech et campus IAI.<br>
+  Pose ta question en français ou en English.</p>
+  <div class="ana-caps">
+    <span class="ana-cap">🐍 Python & Django</span>
+    <span class="ana-cap">🤖 IA & ML</span>
+    <span class="ana-cap">📱 Flutter</span>
+    <span class="ana-cap">🌐 Web Dev</span>
+    <span class="ana-cap">🏫 Campus IAI</span>
+  </div>
+</div>
+
+<!-- Historique des échanges -->
+<div class="messages-zone" id="msgs">
+  {% for echange in historique %}
+  <!-- Question -->
+  <div class="msg-row user">
+    <div class="bubble user">
+      {{ echange.question }}
+      <span class="b-time">{{ echange.date|time:"H:i" }}</span>
+    </div>
+  </div>
+  <!-- Réponse Ana -->
+  <div class="msg-row">
+    <div class="ana-av">🤖</div>
+    <div class="bubble ana">
+      {{ echange.reponse|linebreaksbr }}
+      <span class="b-time">{{ echange.date|time:"H:i" }}</span>
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- Typing indicator -->
+  <div class="msg-row" id="typing" style="display:none;">
+    <div class="ana-av">🤖</div>
+    <div class="typing-bub">
+      <div class="td"></div><div class="td"></div><div class="td"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Suggestions -->
+<div class="ana-suggestions">
+  <button class="sug" onclick="send('C\'est quoi Django REST Framework ?')">🐍 Django REST</button>
+  <button class="sug" onclick="send('Explique-moi le fine-tuning')">🧠 Fine-tuning</button>
+  <button class="sug" onclick="send('Quels examens arrivent à l\'IAI ?')">📅 Examens IAI</button>
+  <button class="sug" onclick="send('Différence ML vs Deep Learning ?')">🤖 ML vs DL</button>
+  <button class="sug" onclick="send('Comment démarrer avec Flutter ?')">📱 Flutter</button>
+</div>
+
+<!-- Input -->
+<div class="ana-input-bar">
+  <input class="ana-input" id="inp"
+    placeholder="Pose ta question à Ana..."
+    onkeydown="if(event.key==='Enter'){event.preventDefault();sendMsg();}">
+  <button class="ana-send" onclick="sendMsg()">➤</button>
+</div>
+{% endblock %}
+
+{% block fab %}{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+function sendMsg() {
+  const inp = document.getElementById('inp');
+  const text = inp.value.trim();
+  if (!text) return;
+  addBubble(text, 'user');
+  inp.value = '';
+  showTyping();
+
+  fetch("{% url 'ana_message' %}", {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','X-CSRFToken':CSRF},
+    body: JSON.stringify({message: text})
+  })
+  .then(r => r.json())
+  .then(data => { hideTyping(); addBubble(data.response, 'ana'); })
+  .catch(() => { hideTyping(); addBubble('Erreur de connexion. Réessaie.','ana'); });
+}
+
+function send(text) {
+  document.getElementById('inp').value = text;
+  sendMsg();
+}
+
+function addBubble(text, role) {
+  const msgs = document.getElementById('msgs');
+  const typing = document.getElementById('typing');
+  const now = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'msg-row' + (role === 'user' ? ' user' : '');
+  div.innerHTML = role === 'ana'
+    ? `<div class="ana-av">🤖</div><div class="bubble ana">${text}<span class="b-time">${now}</span></div>`
+    : `<div class="bubble user">${text}<span class="b-time">${now}</span></div>`;
+  msgs.insertBefore(div, typing);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const t = document.getElementById('typing');
+  t.style.display = 'flex';
+  document.getElementById('msgs').scrollTop = 99999;
+}
+function hideTyping() {
+  document.getElementById('typing').style.display = 'none';
+}
+
+// Scroll en bas au chargement
+window.onload = () => {
+  const m = document.getElementById('msgs');
+  if(m) m.scrollTop = m.scrollHeight;
+};
+</script>
+{% endblock %}

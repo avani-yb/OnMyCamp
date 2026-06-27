@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Stay Tuned{% endblock %}
+
+{% block header_plus %}
+  {% if request.user.role in "rr,daac" or request.user.privilege == "admin" or request.user.privilege == "superadmin" %}
+  <a href="{% url 'staytuned_create' %}" class="h-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="18" height="18">
+      <path d="M12 5v14M5 12h14"/>
+    </svg>
+  </a>
+  {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+.conf-list { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.conf-card { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.conf-banner {
+  height: 90px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; position: relative;
+  background: linear-gradient(135deg, var(--green-light), #b8dfc8);
+}
+.conf-live {
+  position: absolute; top: 8px; left: 10px;
+  background: #ff4757; color: white;
+  font-size: 9px; font-weight: 800;
+  padding: 3px 8px; border-radius: 999px;
+  animation: blink 1.4s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.55;} }
+.conf-plat {
+  position: absolute; top: 8px; right: 10px;
+  background: rgba(0,0,0,.45); color: white;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+}
+.conf-body { padding: 12px 14px 6px; }
+.conf-title { font-size: 14px; font-weight: 800; margin-bottom: 4px; }
+.conf-desc { font-size: 12px; color: var(--muted); line-height: 1.55; }
+.conf-foot {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px 12px; gap: 8px;
+}
+.conf-by { font-size: 11px; color: var(--muted); }
+.join-btn {
+  background: var(--green); color: white;
+  font-size: 12px; font-weight: 700;
+  padding: 7px 16px; border-radius: 8px;
+  border: none; text-decoration: none;
+  white-space: nowrap;
+}
+.join-btn.outline {
+  background: transparent; color: var(--green);
+  border: 1.5px solid var(--green);
+}
+{% endblock %}
+
+{% block content %}
+<div class="conf-list">
+  {% for lien in liens %}
+  <div class="conf-card">
+    <div class="conf-banner">
+      {% if lien.plateforme == "Zoom" %}📹
+      {% elif lien.plateforme == "YouTube" %}▶️
+      {% elif lien.plateforme == "Google Meet" %}📞
+      {% else %}🔗{% endif %}
+      {% if lien.is_live %}<div class="conf-live">● LIVE</div>{% endif %}
+      <div class="conf-plat">{{ lien.plateforme }}</div>
+    </div>
+    <div class="conf-body">
+      <div class="conf-title">{{ lien.titre }}</div>
+      {% if lien.description %}
+      <div class="conf-desc">{{ lien.description }}</div>
+      {% endif %}
+    </div>
+    <div class="conf-foot">
+      <div class="conf-by">
+        {{ lien.auteur.first_name }} · {{ lien.date_creation|date:"d M · H\hi" }}
+      </div>
+      <a href="{{ lien.url }}" target="_blank" rel="noopener"
+        class="join-btn {% if not lien.is_live %}outline{% endif %}">
+        {% if lien.is_live %}Rejoindre →{% else %}Voir le lien{% endif %}
+      </a>
+    </div>
+  </div>
+  {% empty %}
+  <div class="empty-state">
+    <div class="e-icon">📡</div>
+    <p>Aucun lien disponible.<br>Revenez bientôt !</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Accueil{% endblock %}
+
+{% block header_plus %}
+  {% if request.user.can_post %}
+  <a href="{% url 'post_create' %}" class="h-btn" title="Nouvelle publication">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="18" height="18">
+      <path d="M12 5v14M5 12h14"/>
+    </svg>
+  </a>
+  {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+.feed { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+
+.pin-bar {
+  background: linear-gradient(90deg, #1a7a4a, #2d9e64);
+  color: white; padding: 7px 14px;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.post-card {
+  background: white; border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(26,122,74,.09);
+  cursor: pointer;
+  transition: box-shadow .2s;
+}
+.post-card:hover { box-shadow: 0 4px 20px rgba(26,122,74,.16); }
+
+.post-header {
+  padding: 12px 14px 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: #e8f5ee; color: #1a7a4a;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 800; flex-shrink: 0;
+}
+.post-meta { flex: 1; }
+.p-name { font-size: 13px; font-weight: 800; }
+.p-role { font-size: 11px; color: #1a7a4a; font-weight: 600; }
+.p-time { font-size: 11px; color: #6b7280; }
+
+.post-media {
+  width: 100%; height: auto;
+  max-height: 500px; object-fit: contain;
+  background: #f0f4f2; display: block;
+}
+.post-body {
+  padding: 8px 14px 12px;
+  font-size: 13px; line-height: 1.65; color: #333;
+}
+
+/* Résumé réactions */
+.reactions-summary {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 14px; font-size: 13px; color: #6b7280;
+  border-top: 1px solid #e2e8e4; min-height: 30px;
+}
+
+/* Barre réactions slide */
+.reactions-bar {
+  display: flex; align-items: center; justify-content: space-around;
+  gap: 4px; padding: 0 14px;
+  max-height: 0; overflow: hidden;
+  transition: max-height .3s ease, padding .3s ease;
+  background: #f8fdf9;
+  border-top: 0px solid #e2e8e4;
+}
+.reactions-bar.open {
+  max-height: 80px;
+  padding: 10px 14px;
+  border-top: 1px solid #e2e8e4;
+}
+.react-opt {
+  font-size: 26px; cursor: pointer;
+  padding: 6px 8px; border-radius: 50%;
+  transition: transform .15s, background .15s;
+  border: none; background: transparent; line-height: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.react-opt:hover { transform: scale(1.35); background: #e8f5ee; }
+.react-opt.selected { background: #e8f5ee; }
+.react-opt .react-label {
+  font-size: 10px; font-weight: 700; color: #1a7a4a;
+}
+
+/* Barre d'actions */
+.post-actions {
+  padding: 8px 14px 10px;
+  border-top: 1px solid #e2e8e4;
+  display: flex; gap: 6px; align-items: center;
+}
+
+/* Bouton like */
+.like-btn {
+  display: inline-flex;
+  align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 8px;
+  border: 1px solid #e2e8e4;
+  background: transparent; cursor: pointer;
+  font-size: 13px; font-family: inherit;
+  transition: all .15s; color: #6b7280;
+}
+.like-btn:hover { background: #e8f5ee; border-color: #1a7a4a; color: #1a7a4a; }
+.like-btn.reacted { background: #e8f5ee; border-color: #1a7a4a; color: #1a7a4a; font-weight: 700; }
+.like-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.like-count { font-size: 12px; font-weight: 600; }
+
+/* Bouton commentaire */
+.comment-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 8px;
+  border: 1px solid #e2e8e4;
+  background: transparent; cursor: pointer;
+  font-size: 13px; font-family: inherit;
+  transition: all .15s; color: #6b7280;
+}
+.comment-btn:hover, .comment-btn.active {
+  background: #e8f5ee; border-color: #1a7a4a; color: #1a7a4a;
+}
+.comment-btn svg { width: 16px; height: 16px; }
+.comment-count { font-size: 12px; font-weight: 600; }
+
+/* Bouton supprimer */
+.del-btn {
+  margin-left: auto;
+  display: inline-flex; align-items: center;
+  padding: 6px 8px; border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent; cursor: pointer;
+  color: #cc3333; transition: all .15s;
+}
+.del-btn:hover { background: #ffeeee; border-color: #ffcccc; }
+.del-btn svg { width: 16px; height: 16px; }
+
+/* Section commentaires */
+.comments-section {
+  display: none;
+  border-top: 1px solid #e2e8e4;
+  padding: 10px 14px;
+  flex-direction: column; gap: 8px;
+  background: #fafafa;
+}
+.comments-section.open { display: flex; }
+
+.comment-form {
+  display: flex; gap: 8px; align-items: center;
+  background: white; border-radius: 999px;
+  padding: 6px 6px 6px 14px;
+  border: 1.5px solid #e2e8e4;
+  margin-bottom: 4px;
+}
+.comment-form input {
+  flex: 1; border: none; outline: none;
+  font-size: 13px; font-family: inherit;
+  background: transparent;
+}
+.comment-form button {
+  width: 32px; height: 32px;
+  background: #1a7a4a; border-radius: 50%;
+  border: none; cursor: pointer; color: white;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.comment-form button svg { width: 14px; height: 14px; }
+
+.comment-item {
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.c-av {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: #e8f5ee; color: #1a7a4a;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+.c-bubble {
+  background: white; border-radius: 12px;
+  border-bottom-left-radius: 4px;
+  padding: 7px 11px; flex: 1;
+  border: 1px solid #e2e8e4;
+}
+.c-author { font-size: 11px; font-weight: 800; color: #1a7a4a; }
+.c-text { font-size: 12px; color: #333; margin-top: 2px; line-height: 1.5; }
+.c-time { font-size: 10px; color: #6b7280; margin-top: 3px; }
+
+/* Responsive mobile */
+@media (max-width: 600px) {
+  .feed { padding: 6px; gap: 8px; }
+  .post-body { font-size: 14px; }
+  .react-opt { font-size: 24px; }
+  .react-opt .react-label { display: none; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="feed" id="feed">
+
+  {% for post in posts %}
+  <article class="post-card" id="post-{{ post.pk }}"
+    onclick="handlePostClick(event, {{ post.pk }})">
+
+    {% if post.is_pinned %}
+    <div class="pin-bar">📌 Publication épinglée</div>
+    {% endif %}
+
+    <div class="post-header">
+      <div class="avatar">
+        {{ post.auteur.first_name|first|upper }}{{ post.auteur.last_name|first|upper }}
+      </div>
+      <div class="post-meta">
+        <div class="p-name">{{ post.auteur.get_full_name }}</div>
+        <div class="p-role">{{ post.auteur.get_role_display }}</div>
+      </div>
+      <div class="p-time">{{ post.date_creation|timesince }}</div>
+    </div>
+
+    {% if post.media %}
+    <img src="{{ post.media.url }}" alt="Media" class="post-media" loading="lazy">
+    {% endif %}
+
+    {% if post.contenu %}
+    <div class="post-body">{{ post.contenu|linebreaksbr }}</div>
+    {% endif %}
+
+    <!-- Résumé réactions -->
+    <div class="reactions-summary" id="summary-{{ post.pk }}">
+      {% if post.likes %}👍 <strong>{{ post.likes }}</strong>{% endif %}
+      {% if post.coeurs %} ❤️ <strong>{{ post.coeurs }}</strong>{% endif %}
+      {% if post.rires %} 😂 <strong>{{ post.rires }}</strong>{% endif %}
+      {% if post.chocs %} 😮 <strong>{{ post.chocs }}</strong>{% endif %}
+      {% if post.bravos %} 👏 <strong>{{ post.bravos }}</strong>{% endif %}
+    </div>
+
+    <!-- Barre réactions (slide au clic sur la publication) -->
+    <div class="reactions-bar" id="reactions-{{ post.pk }}">
+      <button class="react-opt {% if post.user_reaction.type_reaction == 'like' %}selected{% endif %}"
+        onclick="sendReaction(event, {{ post.pk }}, 'like')">
+        👍<span class="react-label">J'aime</span>
+      </button>
+      <button class="react-opt {% if post.user_reaction.type_reaction == 'coeur' %}selected{% endif %}"
+        onclick="sendReaction(event, {{ post.pk }}, 'coeur')">
+        ❤️<span class="react-label">J'adore</span>
+      </button>
+      <button class="react-opt {% if post.user_reaction.type_reaction == 'rire' %}selected{% endif %}"
+        onclick="sendReaction(event, {{ post.pk }}, 'rire')">
+        😂<span class="react-label">Haha</span>
+      </button>
+      <button class="react-opt {% if post.user_reaction.type_reaction == 'choc' %}selected{% endif %}"
+        onclick="sendReaction(event, {{ post.pk }}, 'choc')">
+        😮<span class="react-label">Wow</span>
+      </button>
+      <button class="react-opt {% if post.user_reaction.type_reaction == 'bravo' %}selected{% endif %}"
+        onclick="sendReaction(event, {{ post.pk }}, 'bravo')">
+        👏<span class="react-label">Bravo</span>
+      </button>
+    </div>
+
+    <!-- Barre d'actions -->
+    <div class="post-actions" onclick="event.stopPropagation()">
+
+      <!-- Bouton LIKE -->
+      <button class="like-btn {% if post.user_reaction %}reacted{% endif %}"
+        onclick="handlePostClick(event, {{ post.pk }})">
+        <svg viewBox="0 0 24 24"
+          fill="{% if post.user_reaction %}#1a7a4a{% else %}none{% endif %}"
+          stroke="{% if post.user_reaction %}#1a7a4a{% else %}#6b7280{% endif %}"
+          stroke-width="2">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+          <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+        </svg>
+        <span class="like-count">{{ post.total_reactions }}</span>
+      </button>
+
+      <!-- Bouton COMMENTAIRE -->
+      <button class="comment-btn" id="cbtn-{{ post.pk }}"
+        onclick="toggleComments({{ post.pk }}, this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span class="comment-count" id="ccount-{{ post.pk }}">{{ post.nb_comments }}</span>
+      </button>
+
+      <!-- Bouton SUPPRIMER -->
+      {% if request.user.privilege == 'superadmin' or request.user == post.auteur %}
+      <form method="post" action="{% url 'post_delete' post.pk %}"
+        style="display:contents;" onclick="event.stopPropagation()">
+        {% csrf_token %}
+        <button type="submit" class="del-btn"
+          onclick="return confirm('Supprimer cette publication ?')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6M14 11v6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </button>
+      </form>
+      {% endif %}
+
+    </div>
+
+    <!-- Section commentaires -->
+    <div class="comments-section" id="comments-{{ post.pk }}"
+      onclick="event.stopPropagation()">
+      <form method="post" action="{% url 'post_comment' post.pk %}" class="comment-form">
+        {% csrf_token %}
+        <input type="text" name="contenu"
+          placeholder="Écrire un commentaire..." required autocomplete="off">
+        <button type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </form>
+
+      {% for comment in post.comments.all %}
+      <div class="comment-item">
+        <div class="c-av">
+          {{ comment.auteur.first_name|first|upper }}{{ comment.auteur.last_name|first|upper }}
+        </div>
+        <div class="c-bubble">
+          <div class="c-author">{{ comment.auteur.get_full_name }}</div>
+          <div class="c-text">{{ comment.contenu }}</div>
+          <div class="c-time">{{ comment.date_creation|timesince }}</div>
+        </div>
+      </div>
+      {% empty %}
+      <div style="text-align:center;font-size:12px;color:#6b7280;padding:8px;">
+        Aucun commentaire. Sois le premier !
+      </div>
+      {% endfor %}
+    </div>
+
+  </article>
+  {% empty %}
+  <div class="empty-state">
+    <div class="e-icon">📭</div>
+    <p>Aucune publication pour le moment.<br>
+    {% if request.user.can_post %}
+    <a href="{% url 'post_create' %}" style="color:#1a7a4a;font-weight:700;">
+      Sois le premier à publier !
+    </a>
+    {% endif %}
+    </p>
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block fab %}
+  {% if request.user.can_post %}
+  <a href="{% url 'post_create' %}" class="fab">＋</a>
+  {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+// Clic sur la publication → toggle barre réactions
+function handlePostClick(e, postId) {
+  if (e.target.closest('.post-actions') ||
+      e.target.closest('.comments-section') ||
+      e.target.closest('.reactions-bar')) return;
+
+  document.querySelectorAll('.reactions-bar.open').forEach(bar => {
+    if (bar.id !== 'reactions-' + postId) bar.classList.remove('open');
+  });
+
+  const bar = document.getElementById('reactions-' + postId);
+  bar.classList.toggle('open');
+}
+
+// Envoyer réaction via fetch
+function sendReaction(e, postId, type) {
+  e.stopPropagation();
+
+  fetch('/post/' + postId + '/react/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': CSRF,
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    body: 'type_reaction=' + type
+  })
+  .then(r => r.json())
+  .then(data => {
+    // Mettre à jour résumé
+    const summary = document.getElementById('summary-' + postId);
+    let html = '';
+    if (data.likes)  html += '👍 <strong>' + data.likes + '</strong> ';
+    if (data.coeurs) html += '❤️ <strong>' + data.coeurs + '</strong> ';
+    if (data.rires)  html += '😂 <strong>' + data.rires + '</strong> ';
+    if (data.chocs)  html += '😮 <strong>' + data.chocs + '</strong> ';
+    if (data.bravos) html += '👏 <strong>' + data.bravos + '</strong> ';
+    summary.innerHTML = html;
+
+    // Mettre à jour total sur le bouton like
+    const total = (data.likes||0)+(data.coeurs||0)+(data.rires||0)+(data.chocs||0)+(data.bravos||0);
+    const likeBtn = document.querySelector('#post-' + postId + ' .like-btn');
+    if (likeBtn) {
+      likeBtn.querySelector('.like-count').textContent = total;
+      if (data.user_reaction) {
+        likeBtn.classList.add('reacted');
+        likeBtn.querySelector('svg').setAttribute('fill', '#1a7a4a');
+        likeBtn.querySelector('svg').setAttribute('stroke', '#1a7a4a');
+      } else {
+        likeBtn.classList.remove('reacted');
+        likeBtn.querySelector('svg').setAttribute('fill', 'none');
+        likeBtn.querySelector('svg').setAttribute('stroke', '#6b7280');
+      }
+    }
+
+    // Mettre à jour selected
+    document.querySelectorAll('#reactions-' + postId + ' .react-opt').forEach(btn => {
+      btn.classList.remove('selected');
+    });
+    if (data.user_reaction) {
+      const map = {'like':0,'coeur':1,'rire':2,'choc':3,'bravo':4};
+      const btns = document.querySelectorAll('#reactions-' + postId + ' .react-opt');
+      if (btns[map[data.user_reaction]]) btns[map[data.user_reaction]].classList.add('selected');
+    }
+
+    // Fermer barre après réaction
+    setTimeout(() => {
+      document.getElementById('reactions-' + postId).classList.remove('open');
+    }, 400);
+  })
+  .catch(() => window.location.reload());
+}
+
+// Toggle commentaires
+function toggleComments(postId, btn) {
+  const section = document.getElementById('comments-' + postId);
+  section.classList.toggle('open');
+  btn.classList.toggle('active');
+  if (section.classList.contains('open')) {
+    section.querySelector('input')?.focus();
+  }
+}
+
+// Fermer barres au clic ailleurs
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.post-card')) {
+    document.querySelectorAll('.reactions-bar.open').forEach(b => b.classList.remove('open'));
+  }
+});
+</script>
+{% endblock %}

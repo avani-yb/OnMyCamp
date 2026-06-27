@@ -1,0 +1,352 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OnMyCamp — {% block title %}{% endblock %}</title>
+  <style>
+    /* ═══════════════════════════════
+       VARIABLES & RESET
+    ═══════════════════════════════ */
+    :root {
+      --green:       #1a7a4a;
+      --green-dark:  #115533;
+      --green-mid:   #2d9e64;
+      --green-light: #e8f5ee;
+      --gold:        #f0a500;
+      --white:       #ffffff;
+      --bg:          #f0f4f2;
+      --text:        #1a1a1a;
+      --muted:       #6b7280;
+      --border:      #e2e8e4;
+      --shadow:      0 2px 12px rgba(26,122,74,.09);
+      --radius:      14px;
+      --radius-sm:   9px;
+      --ana-purple:  #6c3fc5;
+      --ana-light:   #f0eaff;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+
+    /* REMPLACEZ VOTRE BLOC BODY ACTUEL PAR CELUI-CI : */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      width: 100%; /* Prend toute la largeur */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 72px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    button, input, textarea, select {
+      font-family: inherit;
+      font-size: inherit;
+    }
+
+    /* ═══════════════════════════════
+       HEADER
+    ═══════════════════════════════ */
+    .app-header {
+      background: var(--green);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 16px rgba(26,122,74,.3);
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-logo img {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .header-logo span {
+      font-size: 18px;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -.3px;
+    }
+
+    .header-logo span em {
+      color: var(--gold);
+      font-style: normal;
+    }
+
+    .header-actions { display: flex; gap: 7px; align-items: center; }
+
+    .h-btn {
+      width: 34px; height: 34px;
+      background: rgba(255,255,255,.15);
+      border: none; border-radius: 9px;
+      color: white; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; text-decoration: none;
+      transition: background .2s; position: relative;
+    }
+    .h-btn:hover { background: rgba(255,255,255,.28); }
+
+    .h-badge::after {
+      content: attr(data-count);
+      position: absolute; top: -4px; right: -4px;
+      min-width: 16px; height: 16px;
+      background: #ff4757; border-radius: 999px;
+      font-size: 9px; font-weight: 800; color: white;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 3px;
+    }
+
+    /* ═══════════════════════════════
+       MESSAGES DJANGO
+    ═══════════════════════════════ */
+    .alerts { padding: 8px 12px 0; }
+    .alert {
+      padding: 10px 14px; border-radius: 9px;
+      font-size: 13px; font-weight: 600;
+      margin-bottom: 6px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .alert-success { background: var(--green-light); color: var(--green); }
+    .alert-error   { background: #ffeeee; color: #cc3333; }
+    .alert-warning { background: #fff8e1; color: #b8860b; }
+    .alert-info    { background: #e8f0fa; color: #1a4a7a; }
+
+    /* ═══════════════════════════════
+       MAIN
+    ═══════════════════════════════ */
+    main { flex: 1; }
+
+    /* ═══════════════════════════════
+       FAB
+    ═══════════════════════════════ */
+    .fab {
+      position: fixed;
+      bottom: 80px;
+      right: max(14px, calc(50% - 246px + 14px));
+      width: 50px; height: 50px;
+      background: var(--green);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 26px; font-weight: 300;
+      box-shadow: 0 4px 18px rgba(26,122,74,.45);
+      border: none; cursor: pointer; z-index: 90;
+      text-decoration: none; transition: transform .2s;
+    }
+    .fab:hover { transform: scale(1.08); }
+    .fab.purple { background: var(--ana-purple); box-shadow: 0 4px 18px rgba(108,63,197,.45); }
+
+    /* ═══════════════════════════════
+       BOTTOM NAV
+    ═══════════════════════════════ */
+    /* REMPLACEZ VOTRE BLOC .bottom-nav ACTUEL PAR CELUI-CI : */
+    .bottom-nav {
+      position: fixed; 
+      bottom: 0; 
+      left: 0; /* Aligné à gauche de l'écran */
+      width: 100%; /* S'étire sur toute la largeur */
+      height: 66px;
+      background: white;
+      display: flex; 
+      align-items: center;
+      justify-content: space-around;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -4px 20px rgba(0,0,0,.07);
+      z-index: 100; 
+      padding-bottom: 4px;
+    }
+
+
+    .nav-item {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 2px;
+      padding: 5px 8px; border-radius: 10px;
+      text-decoration: none; border: none;
+      background: transparent; cursor: pointer;
+      transition: all .2s; min-width: 52px;
+    }
+
+    .nav-item svg { width: 22px; height: 22px; }
+    .nav-item .n-label {
+      font-size: 9px; font-weight: 700;
+      color: var(--muted);
+    }
+    .nav-item.active { background: var(--green-light); }
+    .nav-item.active .n-label { color: var(--green); }
+    .nav-item.active svg path,
+    .nav-item.active svg circle,
+    .nav-item.active svg rect { stroke: var(--green) !important; }
+
+    .nav-item.ana-tab.active { background: var(--ana-light); }
+    .nav-item.ana-tab.active .n-label { color: var(--ana-purple); }
+    .nav-item.ana-tab.active svg path { stroke: var(--ana-purple) !important; }
+
+    /* ═══════════════════════════════
+       UTILITAIRES
+    ═══════════════════════════════ */
+    .card {
+      background: white; border-radius: var(--radius);
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+
+    .search-wrap {
+      margin: 10px 12px;
+      display: flex; align-items: center;
+      background: white; border-radius: 11px;
+      padding: 9px 14px; gap: 8px;
+      box-shadow: var(--shadow);
+    }
+    .search-wrap input {
+      border: none; outline: none; flex: 1;
+      font-size: 13px; background: transparent;
+    }
+
+    .sec-head {
+      padding: 12px 14px 6px;
+      font-size: 11px; font-weight: 700;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .empty-state {
+      text-align: center; padding: 50px 24px;
+      color: var(--muted);
+    }
+    .empty-state .e-icon { font-size: 52px; margin-bottom: 14px; }
+    .empty-state p { font-size: 13px; line-height: 1.7; }
+
+    .btn {
+      display: inline-flex; align-items: center;
+      justify-content: center; gap: 6px;
+      padding: 10px 20px; border-radius: 9px;
+      font-weight: 700; font-size: 14px;
+      border: none; cursor: pointer;
+      transition: all .2s; text-decoration: none;
+    }
+    .btn-green { background: var(--green); color: white; }
+    .btn-green:hover { background: var(--green-dark); }
+    .btn-outline {
+      background: transparent; color: var(--green);
+      border: 1.5px solid var(--green);
+    }
+    .btn-outline:hover { background: var(--green-light); }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block; font-size: 12px;
+      font-weight: 700; color: var(--muted);
+      margin-bottom: 5px; text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .form-control {
+      width: 100%; padding: 10px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 9px; font-size: 14px;
+      background: white; outline: none;
+      transition: border .2s;
+    }
+    .form-control:focus { border-color: var(--green); }
+
+    {% block extra_css %}{% endblock %}
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  {% block header %}
+  <header class="app-header">
+    <a href="{% url 'accueil' %}" class="header-logo">
+      <img src="{% static 'images/Logo.png' %}" alt="OnMyCamp">
+      <span>On<em>My</em>Camp</span>
+    </a>
+    <div class="header-actions">
+      {% block header_plus %}{% endblock %}
+      <a href="{% url 'recherche' %}" class="h-btn" title="Rechercher">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" width="18" height="18"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+      </a>
+      <a href="{% url 'notifications' %}" class="h-btn {% if notif_count > 0 %}h-badge{% endif %}" data-count="{{ notif_count }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </a>
+      <a href="{% url 'profil' request.user.pk %}" class="h-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" width="18" height="18"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </a>
+    </div>
+  </header>
+  {% endblock %}
+
+  <!-- ── ALERTES ── -->
+  {% if messages %}
+  <div class="alerts">
+    {% for m in messages %}
+    <div class="alert alert-{{ m.tags }}">
+      {% if m.tags == 'success' %}✅{% elif m.tags == 'error' %}❌{% elif m.tags == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+      {{ m }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ── CONTENU ── -->
+  <main>{% block content %}{% endblock %}</main>
+
+  <!-- ── FAB ── -->
+  {% block fab %}{% endblock %}
+
+  <!-- ── BOTTOM NAV ── -->
+  <nav class="bottom-nav">
+    <!-- Accueil -->
+    <a href="{% url 'accueil' %}" class="nav-item {% if active == 'accueil' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.2"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+      <span class="n-label">Accueil</span>
+    </a>
+    <!-- Team -->
+    <a href="{% url 'team' %}" class="nav-item {% if active == 'team' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.2"><circle cx="9" cy="7" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="18" cy="7" r="2.5"/><path d="M16 20c0-2.5 1.8-4.5 4-5"/></svg>
+      <span class="n-label">Team</span>
+    </a>
+    <!-- Stay Tuned -->
+    <a href="{% url 'staytuned' %}" class="nav-item {% if active == 'staytuned' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="#9ca3af"/></svg>
+      <span class="n-label">Stay Tuned</span>
+    </a>
+    <!-- Inbox (icône discussions du brief) -->
+    <a href="{% url 'inbox' %}" class="nav-item {% if active == 'inbox' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="#9ca3af"/><circle cx="12" cy="10" r="1" fill="#9ca3af"/><circle cx="15" cy="10" r="1" fill="#9ca3af"/></svg>
+      <span class="n-label">Inbox</span>
+    </a>
+    <!-- Agenda -->
+    <a href="{% url 'agenda' %}" class="nav-item {% if active == 'agenda' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="12" cy="16" r="1" fill="#9ca3af"/></svg>
+      <span class="n-label">Agenda</span>
+    </a>
+    <!-- Ana IA -->
+    <a href="{% url 'ana' %}" class="nav-item ana-tab {% if active == 'ana' %}active{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2.2"><rect x="3" y="3" width="18" height="14" rx="3"/><circle cx="8.5" cy="10" r="1.5" fill="#9ca3af"/><circle cx="15.5" cy="10" r="1.5" fill="#9ca3af"/><path d="M8 21h8M12 17v4"/></svg>
+      <span class="n-label">Ana IA</span>
+    </a>
+  </nav>
+
+  <script>
+    // Auto-fermeture des alertes après 4s
+    document.querySelectorAll('.alert').forEach(a => {
+      setTimeout(() => { a.style.transition='opacity .5s'; a.style.opacity='0'; }, 3500);
+      setTimeout(() => a.remove(), 4000);
+    });
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
